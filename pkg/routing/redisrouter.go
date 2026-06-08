@@ -120,6 +120,22 @@ func (r *RedisRouter) ClearRoomState(_ context.Context, roomName livekit.RoomNam
 	return nil
 }
 
+// ListRoomNodeAssignments returns the full room_name -> node_id map. Used by the
+// space-affinity node selector to spread a space's rooms across nodes. Note that entries
+// may reference nodes that have since died (the map is not cleaned up on crash); callers
+// should filter by live nodes.
+func (r *RedisRouter) ListRoomNodeAssignments(_ context.Context) (map[livekit.RoomName]livekit.NodeID, error) {
+	raw, err := r.rc.HGetAll(r.ctx, NodeRoomKey).Result()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not list room node assignments")
+	}
+	out := make(map[livekit.RoomName]livekit.NodeID, len(raw))
+	for room, nodeID := range raw {
+		out[livekit.RoomName(room)] = livekit.NodeID(nodeID)
+	}
+	return out, nil
+}
+
 func (r *RedisRouter) GetNode(nodeID livekit.NodeID) (*livekit.Node, error) {
 	data, err := r.rc.HGet(r.ctx, NodesKey, string(nodeID)).Result()
 	if err == redis.Nil {

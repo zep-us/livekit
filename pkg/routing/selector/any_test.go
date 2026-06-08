@@ -159,7 +159,7 @@ func TestAnySelector_SelectNode_TwoChoice(t *testing.T) {
 				Algorithm: tt.algorithm,
 			}
 
-			node, err := selector.SelectNode(tt.nodes)
+			node, err := selector.SelectNode(tt.nodes, PlacementContext{})
 
 			if tt.wantErr != "" {
 				require.Error(t, err)
@@ -214,7 +214,7 @@ func TestAnySelector_SelectNode_TwoChoice_Probabilistic_Behavior(t *testing.T) {
 	higestLoadSelections := 0
 
 	for range iterations {
-		node, err := selector.SelectNode(nodes)
+		node, err := selector.SelectNode(nodes, PlacementContext{})
 		require.NoError(t, err)
 		require.NotNil(t, node)
 
@@ -277,7 +277,7 @@ func TestAnySelector_SelectNode_InvalidParameters(t *testing.T) {
 				Algorithm: tt.algorithm,
 			}
 
-			node, err := selector.SelectNode(nodes)
+			node, err := selector.SelectNode(nodes, PlacementContext{})
 
 			require.Error(t, err)
 			require.Contains(t, err.Error(), tt.wantErr)

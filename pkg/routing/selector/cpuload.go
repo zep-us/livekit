@@ -45,7 +45,7 @@ func (s *CPULoadSelector) filterNodes(nodes []*livekit.Node) ([]*livekit.Node, e
 	return nodes, nil
 }
 
-func (s *CPULoadSelector) SelectNode(nodes []*livekit.Node) (*livekit.Node, error) {
+func (s *CPULoadSelector) SelectNode(nodes []*livekit.Node, _ PlacementContext) (*livekit.Node, error) {
 	nodes, err := s.filterNodes(nodes)
 	if err != nil {
 		return nil, err

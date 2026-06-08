@@ -142,6 +142,14 @@ type Router interface {
 	Stop()
 }
 
+// RoomNodeLister is an optional Router capability that exposes the full room->node
+// assignment map. It is deliberately kept separate from Router (no counterfeiter fake)
+// so routers that can't support it (e.g. the single-node LocalRouter) simply don't
+// implement it and callers fall back gracefully via a type assertion.
+type RoomNodeLister interface {
+	ListRoomNodeAssignments(ctx context.Context) (map[livekit.RoomName]livekit.NodeID, error)
+}
+
 type StartParticipantSignalResults struct {
 	ConnectionID        livekit.ConnectionID
 	RequestSink         MessageSink

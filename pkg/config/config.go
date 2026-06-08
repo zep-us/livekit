@@ -250,6 +250,13 @@ type NodeSelectorConfig struct {
 	CPULoadLimit float32        `yaml:"cpu_load_limit,omitempty"`
 	SysloadLimit float32        `yaml:"sysload_limit,omitempty"`
 	Regions      []RegionConfig `yaml:"regions,omitempty"`
+	// AffinityPenalty is used by the "spaceaffinity" selector: the load-equivalent penalty added
+	// per same-space PARTICIPANT already on a node (load-weighted, not a room count). 0 -> selector
+	// default (0.01, i.e. ~100 same-space participants ~= +1.0 of system load).
+	AffinityPenalty float32 `yaml:"affinity_penalty,omitempty"`
+	// SpaceRoomPrefix is used by the "spaceaffinity" selector to recognize/parse the space
+	// identity from a room name (e.g. "live_Space_"). Empty -> affinity is inactive.
+	SpaceRoomPrefix string `yaml:"space_room_prefix,omitempty"`
 }
 
 type SignalRelayConfig struct {

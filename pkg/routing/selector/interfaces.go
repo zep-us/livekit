@@ -25,9 +25,23 @@ import (
 
 var ErrUnsupportedSelector = errors.New("unsupported node selector")
 
+// PlacementContext carries optional, additive information about the room being placed.
+// Selectors that don't need it ignore it; the spaceaffinity selector uses it to spread
+// a space's rooms across nodes. Empty fields mean "no information" (graceful fallback).
+type PlacementContext struct {
+	// RoomName is the name of the room being placed.
+	RoomName livekit.RoomName
+	// SameSpaceLoadByNode maps a node id to the current LOAD that the same space already puts
+	// on it — the sum of participant counts across that space's EXISTING rooms on the node, NOT
+	// a raw room count (a single room can be very heavy). Derived on each placement from the live
+	// room->node map + current room stats (no persistent counter), so stale entries from dead
+	// nodes are naturally excluded and empty rooms contribute ~0.
+	SameSpaceLoadByNode map[livekit.NodeID]float32
+}
+
 // NodeSelector selects an appropriate node to run the current session
 type NodeSelector interface {
-	SelectNode(nodes []*livekit.Node) (*livekit.Node, error)
+	SelectNode(nodes []*livekit.Node, ctx PlacementContext) (*livekit.Node, error)
 }
 
 func CreateNodeSelector(conf *config.Config) (NodeSelector, error) {
@@ -57,6 +71,20 @@ func CreateNodeSelector(conf *config.Config) (NodeSelector, error) {
 		}
 		s.SysloadLimit = conf.NodeSelector.SysloadLimit
 		return s, nil
+	case "spaceaffinity":
+		penalty := conf.NodeSelector.AffinityPenalty
+		if penalty <= 0 {
+			penalty = DefaultAffinityPenalty
+		}
+		return &SpaceAffinitySelector{
+			SystemLoadSelector: SystemLoadSelector{
+				SysloadLimit: conf.NodeSelector.SysloadLimit,
+				SortBy:       conf.NodeSelector.SortBy,
+				Algorithm:    conf.NodeSelector.Algorithm,
+			},
+			AffinityPenalty: penalty,
+			SpaceRoomPrefix: conf.NodeSelector.SpaceRoomPrefix,
+		}, nil
 	case "random":
 		logger.Warnw("random node selector is deprecated, please switch to \"any\" or another selector", nil)
 		return &AnySelector{conf.NodeSelector.SortBy, conf.NodeSelector.Algorithm}, nil

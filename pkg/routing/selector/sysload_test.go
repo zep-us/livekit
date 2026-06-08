@@ -91,19 +91,19 @@ func TestSystemLoadSelector_SelectNode(t *testing.T) {
 	sel := selector.SystemLoadSelector{SysloadLimit: 1.0, SortBy: "random", Algorithm: "lowest"}
 
 	var nodes []*livekit.Node
-	_, err := sel.SelectNode(nodes)
+	_, err := sel.SelectNode(nodes, selector.PlacementContext{})
 	require.Error(t, err, "should error no available nodes")
 
 	// Select a node with high load when no nodes with low load are available
 	nodes = []*livekit.Node{nodeLoadHigh}
-	if _, err := sel.SelectNode(nodes); err != nil {
+	if _, err := sel.SelectNode(nodes, selector.PlacementContext{}); err != nil {
 		t.Error(err)
 	}
 
 	// Select a node with low load when available
 	nodes = []*livekit.Node{nodeLoadLow, nodeLoadHigh}
 	for range 5 {
-		node, err := sel.SelectNode(nodes)
+		node, err := sel.SelectNode(nodes, selector.PlacementContext{})
 		if err != nil {
 			t.Error(err)
 		}
