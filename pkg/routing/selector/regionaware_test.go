@@ -62,7 +62,7 @@ func TestRegionAwareRouting(t *testing.T) {
 		s, err := selector.NewRegionAwareSelector(regionEast, nil, sortBy, algorithm)
 		require.NoError(t, err)
 
-		node, err := s.SelectNode(nodes)
+		node, err := s.SelectNode(nodes, selector.PlacementContext{})
 		require.NoError(t, err)
 		require.NotNil(t, node)
 	})
@@ -79,7 +79,7 @@ func TestRegionAwareRouting(t *testing.T) {
 		require.NoError(t, err)
 		s.SysloadLimit = loadLimit
 
-		node, err := s.SelectNode(nodes)
+		node, err := s.SelectNode(nodes, selector.PlacementContext{})
 		require.NoError(t, err)
 		require.Equal(t, expectedNode, node)
 	})
@@ -96,7 +96,7 @@ func TestRegionAwareRouting(t *testing.T) {
 		require.NoError(t, err)
 		s.SysloadLimit = loadLimit
 
-		node, err := s.SelectNode(nodes)
+		node, err := s.SelectNode(nodes, selector.PlacementContext{})
 		require.NoError(t, err)
 		require.Equal(t, expectedNode, node)
 	})
@@ -112,7 +112,7 @@ func TestRegionAwareRouting(t *testing.T) {
 		require.NoError(t, err)
 		s.SysloadLimit = loadLimit
 
-		node, err := s.SelectNode(nodes)
+		node, err := s.SelectNode(nodes, selector.PlacementContext{})
 		require.NoError(t, err)
 		require.Equal(t, expectedNode, node)
 	})
@@ -130,7 +130,7 @@ func TestRegionAwareRouting(t *testing.T) {
 		require.NoError(t, err)
 		s.SysloadLimit = loadLimit
 
-		node, err := s.SelectNode(nodes)
+		node, err := s.SelectNode(nodes, selector.PlacementContext{})
 		require.NoError(t, err)
 		require.Equal(t, expectedNode, node)
 	})
@@ -142,7 +142,7 @@ func TestRegionAwareRouting(t *testing.T) {
 		s, err := selector.NewRegionAwareSelector(regionEast, rc, sortBy, algorithm)
 		require.NoError(t, err)
 
-		node, err := s.SelectNode(nodes)
+		node, err := s.SelectNode(nodes, selector.PlacementContext{})
 		require.NoError(t, err)
 		require.NotNil(t, node)
 	})

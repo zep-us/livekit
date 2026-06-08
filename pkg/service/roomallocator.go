@@ -155,7 +155,14 @@ func (r *StandardRoomAllocator) SelectRoomNode(ctx context.Context, roomName liv
 			return err
 		}
 
-		node, err := r.selector.SelectNode(nodes)
+		// Build placement context for space-affinity selection. Only do the extra reads when space
+		// affinity is actually configured, and degrade gracefully if anything fails.
+		pc := selector.PlacementContext{RoomName: roomName}
+		if r.config.NodeSelector.SpaceRoomPrefix != "" {
+			pc.SameSpaceLoadByNode = r.sameSpaceLoadByNode(ctx, roomName, selector.GetAvailableNodes(nodes))
+		}
+
+		node, err := r.selector.SelectNode(nodes, pc)
 		if err != nil {
 			return err
 		}
@@ -170,6 +177,47 @@ func (r *StandardRoomAllocator) SelectRoomNode(ctx context.Context, roomName liv
 	}
 
 	return nil
+}
+
+// sameSpaceLoadByNode returns, per live node, the current LOAD the room's space already puts on it:
+// the sum of participant counts across that space's existing rooms on the node (load-weighted, so a
+// single heavy room counts as heavy). Returns nil when affinity can't be computed (the selector then
+// falls back to load-only placement). Best-effort: any failure degrades gracefully.
+func (r *StandardRoomAllocator) sameSpaceLoadByNode(ctx context.Context, roomName livekit.RoomName, liveNodes []*livekit.Node) map[livekit.NodeID]float32 {
+	lister, ok := r.router.(routing.RoomNodeLister)
+	if !ok {
+		return nil
+	}
+
+	assignments, err := lister.ListRoomNodeAssignments(ctx)
+	if err != nil {
+		logger.Warnw("could not list room assignments for space affinity", err)
+		return nil
+	}
+
+	roomToNode := selector.SameSpaceRoomsOnLiveNodes(roomName, assignments, liveNodes, r.config.NodeSelector.SpaceRoomPrefix)
+	if len(roomToNode) == 0 {
+		return nil
+	}
+
+	names := make([]livekit.RoomName, 0, len(roomToNode))
+	for name := range roomToNode {
+		names = append(names, name)
+	}
+
+	rooms, err := r.roomStore.ListRooms(ctx, names)
+	if err != nil {
+		logger.Warnw("could not load room stats for space affinity", err)
+		return nil
+	}
+
+	load := make(map[livekit.NodeID]float32, len(liveNodes))
+	for _, rm := range rooms {
+		if nodeID, ok := roomToNode[livekit.RoomName(rm.Name)]; ok {
+			load[nodeID] += float32(rm.NumParticipants)
+		}
+	}
+	return load
 }
 
 func (r *StandardRoomAllocator) ValidateCreateRoom(ctx context.Context, roomName livekit.RoomName) error {

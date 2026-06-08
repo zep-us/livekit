@@ -24,7 +24,7 @@ type AnySelector struct {
 	Algorithm string
 }
 
-func (s *AnySelector) SelectNode(nodes []*livekit.Node) (*livekit.Node, error) {
+func (s *AnySelector) SelectNode(nodes []*livekit.Node, _ PlacementContext) (*livekit.Node, error) {
 	nodes = GetAvailableNodes(nodes)
 	if len(nodes) == 0 {
 		return nil, ErrNoAvailableNodes

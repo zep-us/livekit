@@ -67,7 +67,7 @@ func NewRegionAwareSelector(currentRegion string, regions []config.RegionConfig,
 	return s, nil
 }
 
-func (s *RegionAwareSelector) SelectNode(nodes []*livekit.Node) (*livekit.Node, error) {
+func (s *RegionAwareSelector) SelectNode(nodes []*livekit.Node, _ PlacementContext) (*livekit.Node, error) {
 	nodes, err := s.SystemLoadSelector.filterNodes(nodes)
 	if err != nil {
 		return nil, err

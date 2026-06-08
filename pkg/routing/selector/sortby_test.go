@@ -27,7 +27,7 @@ func SortByTest(t *testing.T, sortBy string) {
 	nodes := []*livekit.Node{nodeLoadLow, nodeLoadMedium, nodeLoadHigh}
 
 	for range 5 {
-		node, err := sel.SelectNode(nodes)
+		node, err := sel.SelectNode(nodes, selector.PlacementContext{})
 		if err != nil {
 			t.Error(err)
 		}
@@ -42,14 +42,14 @@ func TestSortByErrors(t *testing.T) {
 	nodes := []*livekit.Node{nodeLoadLow, nodeLoadMedium, nodeLoadHigh}
 
 	// Test unset sort by option error
-	_, err := sel.SelectNode(nodes)
+	_, err := sel.SelectNode(nodes, selector.PlacementContext{})
 	if err != selector.ErrSortByNotSet {
 		t.Error("shouldn't allow empty sortBy")
 	}
 
 	// Test unknown sort by option error
 	sel.SortBy = "testFail"
-	_, err = sel.SelectNode(nodes)
+	_, err = sel.SelectNode(nodes, selector.PlacementContext{})
 	if err != selector.ErrSortByUnknown {
 		t.Error("shouldn't allow unknown sortBy")
 	}
